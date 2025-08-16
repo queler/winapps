@@ -838,18 +838,10 @@ function waCheckVMRunning() {
     # Print feedback.
     echo -n "Checking the status of the Windows VM... "
 
-    # Declare variables.
-    local VM_STATE="" # Stores the state of the Windows VM.
-
     # Obtain VM Status
-    VM_PAUSED=0
-    virsh list --state-paused | grep -wq "$VM_NAME" || VM_PAUSED="$?"
-    VM_RUNNING=0
-    virsh list --state-running | grep -wq "$VM_NAME" || VM_RUNNING="$?"
-    VM_SHUTOFF=0
-    virsh list --state-shutoff | grep -wq "$VM_NAME" || VM_SHUTOFF="$?"
-
-    if [[ $VM_SHUTOFF == "0" ]]; then
+    # running, shut, paused
+    local VM_STATE="$(virsh dominfo "${VM_NAME}"|grep "State:"|awk '{print $2}')" # Stores the state of the Windows VM.
+    if [[ $VM_STATE == "shut" ]]; then
         # Complete the previous line.
         echo -e "${FAIL_TEXT}Failed!${CLEAR_TEXT}\n"
 
@@ -867,7 +859,7 @@ function waCheckVMRunning() {
 
         # Terminate the script.
         return "$EC_VM_OFF"
-    elif [[ $VM_PAUSED == "0" ]]; then
+    elif [[ $VM_STATE == "paused" ]]; then
         # Complete the previous line.
         echo -e "${FAIL_TEXT}Failed!${CLEAR_TEXT}\n"
 
@@ -885,7 +877,7 @@ function waCheckVMRunning() {
 
         # Terminate the script.
         return "$EC_VM_PAUSED"
-    elif [[ $VM_RUNNING != "0" ]]; then
+    elif [[ $VM_STATE != "running" ]]; then
         # Complete the previous line.
         echo -e "${FAIL_TEXT}Failed!${CLEAR_TEXT}\n"
 
